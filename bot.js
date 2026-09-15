@@ -303,47 +303,38 @@ async function stop() {
   return { ok: true, message: 'Bot stopped.' };
 }
 
-// ---- Static File & Dashboard Web Server ----
+// ---- Static Dashboard Server (Targeting dashboard/public/) ----
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
-  // API Route to fetch status
+  // 1. API Endpoint for status checks
   if (req.url === '/api/status' || req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(getStatus()));
   }
 
-  // Determine requested path
-  let relativePath = req.url === '/' ? 'index.html' : req.url;
+  // 2. Resolve requested file path starting inside dashboard/public/
+  const cleanUrl = req.url.split('?')[0];
+  const relativePath = cleanUrl === '/' ? 'index.html' : cleanUrl.replace(/^\/+/, '');
   
-  // Try looking in /dashboard directory first, then root directory
-  let filePath = path.join(__dirname, 'dashboard', relativePath);
+  // Primary location: ./dashboard/public/
+  let filePath = path.join(__dirname, 'dashboard', 'public', relativePath);
+  
+  // Fallback location 1: ./dashboard/
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(__dirname, 'dashboard', relativePath);
+  }
+
+  // Fallback location 2: ./ (root folder)
   if (!fs.existsSync(filePath)) {
     filePath = path.join(__dirname, relativePath);
   }
 
+  // 3. Serve File
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      // Fallback HTML page showing QR Code if dashboard files fail to load
-      if (req.url === '/') {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        if (runtime.status === 'connected') {
-          return res.end('<h2 style="font-family:sans-serif;text-align:center;margin-top:50px;">✅ Bot is Connected to WhatsApp!</h2>');
-        }
-        if (runtime.qrDataUrl) {
-          return res.end(`
-            <div style="font-family:sans-serif;text-align:center;margin-top:50px;">
-              <h2>Scan WhatsApp QR Code</h2>
-              <img src="${runtime.qrDataUrl}" style="border:5px solid #ccc;border-radius:8px;" />
-              <p>Refresh page if expired</p>
-            </div>
-          `);
-        }
-        return res.end('<h2 style="font-family:sans-serif;text-align:center;margin-top:50px;">Bot Starting... Please refresh in 5 seconds.</h2>');
-      }
-
-      res.writeHead(404);
-      return res.end('File Not Found');
+      res.writeHead(404, { 'Content-Type': 'text/html' });
+      return res.end('<h3>404: Dashboard File Not Found</h3>');
     }
 
     const ext = path.extname(filePath);
