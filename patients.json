@@ -1,0 +1,210 @@
+[
+  {
+    "jid": "150375495651422@lid",
+    "name": null,
+    "pushName": "abdulraheem",
+    "stage": "awaiting_screenshot",
+    "selectedCoaching": "c3",
+    "payment": {
+      "amount": 120,
+      "currency": "PKR",
+      "date": "14 September 2026, 6:19 AM",
+      "referenceNumber": "#55772149146",
+      "senderName": "SAIMA ARSHAD",
+      "recipientName": "ABDUL RAHEEM QURESHI",
+      "recipientAccountNumber": "03371456781",
+      "rawText": "{\n  \"amount\": 120.00,\n  \"currency\": \"PKR\",\n  \"date\": \"14 September 2026, 6:19 AM\",\n  \"referenceNumber\": \"#55772149146\",\n  \"senderName\": \"SAIMA ARSHAD\",\n  \"recipientName\": \"ABDUL RAHEEM QURESHI\",\n  \"recipientAccountNumber\": \"03371456781\",\n  \"confidence\": \"high\"\n}",
+      "confidence": "high",
+      "receivedAt": "2026-09-14T19:01:16.332Z",
+      "status": "rejected",
+      "screenshotAt": "2026-09-14T19:01:20.835Z",
+      "autoConfirmEligible": false,
+      "flagReasons": [
+        "Reference number already used before by a different customer — possible reused screenshot",
+        "Slip time is 1062 min apart from when it was sent (possible reused screenshot)",
+        "Amount (120) doesn't match expected price (100)"
+      ],
+      "rejectedAt": "2026-09-14T19:01:49.550Z",
+      "rejectReason": "no"
+    },
+    "createdAt": "2026-09-13T22:10:46.722Z",
+    "paymentHistory": [
+      {
+        "amount": 100,
+        "currency": "PKR",
+        "date": "14 Sep 2026, 03:01 AM",
+        "referenceNumber": "6aa71d4a6f30b51a6c6ad...",
+        "senderName": "Abdul Raheem Qureshi",
+        "recipientName": "Saima Arshad",
+        "recipientAccountNumber": "6229",
+        "rawText": "{\n  \"amount\": 100,\n  \"currency\": \"PKR\",\n  \"date\": \"14 Sep 2026, 03:01 AM\",\n  \"referenceNumber\": \"6aa71d4a6f30b51a6c6ad...\",\n  \"senderName\": \"Abdul Raheem Qureshi\",\n  \"recipientName\": \"Saima Arshad\",\n  \"recipientAccountNumber\": \"6229\",\n  \"confidence\": \"high\"\n}",
+        "confidence": "high",
+        "receivedAt": "2026-09-14T01:08:52.746Z",
+        "status": "pending",
+        "screenshotAt": "2026-09-14T01:08:53.823Z",
+        "autoConfirmEligible": false,
+        "flagReasons": [
+          "Slip time is 188 min apart from when it was sent (possible reused screenshot)",
+          "Recipient account number (6229) does not match your business account — payment may have gone to the wrong account",
+          "Recipient name on slip (\"Saima Arshad\") does not match your business account name (\"Abdul Raheem Qureshi\")",
+          "Amount (100) doesn't match expected price (120)"
+        ]
+      },
+      {
+        "amount": 100,
+        "currency": "PKR",
+        "date": "14 Sep 2026, 03:01 AM",
+        "referenceNumber": "6aa71d4a6f30b51a6c6ad...",
+        "senderName": "Abdul Raheem Qureshi",
+        "recipientName": "Saima Arshad",
+        "recipientAccountNumber": "6229",
+        "rawText": "{\n  \"amount\": 100,\n  \"currency\": \"PKR\",\n  \"date\": \"14 Sep 2026, 03:01 AM\",\n  \"referenceNumber\": \"6aa71d4a6f30b51a6c6ad...\",\n  \"senderName\": \"Abdul Raheem Qureshi\",\n  \"recipientName\": \"Saima Arshad\",\n  \"recipientAccountNumber\": \"6229\",\n  \"confidence\": \"high\"\n}",
+        "confidence": "high",
+        "receivedAt": "2026-09-14T01:15:02.883Z",
+        "status": "rejected",
+        "screenshotAt": "2026-09-14T01:15:04.012Z",
+        "autoConfirmEligible": false,
+        "flagReasons": [
+          "Slip time is 194 min apart from when it was sent (possible reused screenshot)",
+          "Recipient account number (6229) does not match your business account — payment may have gone to the wrong account",
+          "Recipient name on slip (\"Saima Arshad\") does not match your business account name (\"Abdul Raheem Qureshi\")"
+        ],
+        "rejectedAt": "2026-09-14T01:18:30.638Z",
+        "rejectReason": "wrong"
+      }
+    ]
+  },
+  {
+    "jid": "231417820754119@lid",
+    "name": null,
+    "pushName": "Abdul raheem Qureshi",
+    "stage": "main",
+    "selectedCoaching": "c10",
+    "payment": {
+      "amount": 10,
+      "currency": "PKR",
+      "date": "15 September 2026, 12:17 AM",
+      "referenceNumber": "#55819717537",
+      "senderName": "SAIMA ARSHAD",
+      "recipientName": "ABDUL RAHEEM QURESHI",
+      "recipientAccountNumber": "03371456781",
+      "rawText": "{\n  \"amount\": 10.00,\n  \"currency\": \"PKR\",\n  \"date\": \"15 September 2026, 12:17 AM\",\n  \"referenceNumber\": \"#55819717537\",\n  \"senderName\": \"SAIMA ARSHAD\",\n  \"recipientName\": \"ABDUL RAHEEM QURESHI\",\n  \"recipientAccountNumber\": \"03371456781\",\n  \"confidence\": \"high\"\n}",
+      "confidence": "high",
+      "receivedAt": "2026-09-14T19:17:39.123Z",
+      "status": "confirmed",
+      "screenshotAt": "2026-09-14T19:17:40.356Z",
+      "autoConfirmEligible": true,
+      "flagReasons": [],
+      "confirmedAt": "2026-09-14T19:17:40.366Z"
+    },
+    "paymentHistory": [
+      {
+        "amount": 120,
+        "currency": "PKR",
+        "date": "14 Sep 2026, 06:17 AM",
+        "referenceNumber": "6aa74b29654f140a413c5...",
+        "senderName": "Abdul Raheem Qureshi",
+        "recipientName": "Saima Arshad",
+        "recipientAccountNumber": "6229",
+        "rawText": "{\n  \"amount\": 120,\n  \"currency\": \"PKR\",\n  \"date\": \"14 Sep 2026, 06:17 AM\",\n  \"referenceNumber\": \"6aa74b29654f140a413c5...\",\n  \"senderName\": \"Abdul Raheem Qureshi\",\n  \"recipientName\": \"Saima Arshad\",\n  \"recipientAccountNumber\": \"6229\",\n  \"confidence\": \"high\"\n}",
+        "confidence": "high",
+        "receivedAt": "2026-09-14T01:18:05.899Z",
+        "status": "rejected",
+        "screenshotAt": "2026-09-14T01:18:06.758Z",
+        "autoConfirmEligible": false,
+        "flagReasons": [
+          "Recipient account number (6229) does not match your business account — payment may have gone to the wrong account",
+          "Recipient name on slip (\"Saima Arshad\") does not match your business account name (\"Abdul Raheem Qureshi\")"
+        ],
+        "rejectedAt": "2026-09-14T01:18:26.224Z",
+        "rejectReason": "wrong"
+      },
+      {
+        "amount": 120,
+        "currency": "PKR",
+        "date": "14 September 2026, 6:19 AM",
+        "referenceNumber": "#55772149146",
+        "senderName": "SAIMA ARSHAD",
+        "recipientName": "ABDUL RAHEEM QURESHI",
+        "recipientAccountNumber": "03371456781",
+        "rawText": "{\n  \"amount\": 120.00,\n  \"currency\": \"PKR\",\n  \"date\": \"14 September 2026, 6:19 AM\",\n  \"referenceNumber\": \"#55772149146\",\n  \"senderName\": \"SAIMA ARSHAD\",\n  \"recipientName\": \"ABDUL RAHEEM QURESHI\",\n  \"recipientAccountNumber\": \"03371456781\",\n  \"confidence\": \"high\"\n}",
+        "confidence": "high",
+        "receivedAt": "2026-09-14T01:19:47.245Z",
+        "status": "confirmed",
+        "screenshotAt": "2026-09-14T01:19:48.562Z",
+        "autoConfirmEligible": true,
+        "flagReasons": [],
+        "confirmedAt": "2026-09-14T01:19:48.571Z"
+      },
+      {
+        "amount": 10,
+        "currency": "PKR",
+        "date": "15 Sep 2026, 12:04 AM",
+        "referenceNumber": "6aa8454f42dc9d1b96ca2...",
+        "senderName": "Abdul Raheem Qureshi",
+        "recipientName": "Saima Arshad",
+        "recipientAccountNumber": "6229",
+        "rawText": "{\n  \"amount\": 10,\n  \"currency\": \"PKR\",\n  \"date\": \"15 Sep 2026, 12:04 AM\",\n  \"referenceNumber\": \"6aa8454f42dc9d1b96ca2...\",\n  \"senderName\": \"Abdul Raheem Qureshi\",\n  \"recipientName\": \"Saima Arshad\",\n  \"recipientAccountNumber\": \"6229\",\n  \"confidence\": \"high\"\n}",
+        "confidence": "high",
+        "receivedAt": "2026-09-14T19:06:18.537Z",
+        "status": "rejected",
+        "screenshotAt": "2026-09-14T19:06:21.281Z",
+        "autoConfirmEligible": false,
+        "flagReasons": [
+          "Recipient account number (6229) does not match your business account — payment may have gone to the wrong account",
+          "Recipient name on slip (\"Saima Arshad\") does not match your business account name (\"Abdul Raheem Qureshi\")"
+        ],
+        "rejectedAt": "2026-09-14T19:09:14.345Z",
+        "rejectReason": "no"
+      },
+      {
+        "amount": 10,
+        "currency": "PKR",
+        "date": "15 September 2026, 12:09 AM",
+        "referenceNumber": "#55819484769",
+        "senderName": "SAIMA ARSHAD",
+        "recipientName": "ABDUL RAHEEM QURESHI",
+        "recipientAccountNumber": "03371456781",
+        "rawText": "{\n  \"amount\": 10.00,\n  \"currency\": \"PKR\",\n  \"date\": \"15 September 2026, 12:09 AM\",\n  \"referenceNumber\": \"#55819484769\",\n  \"senderName\": \"SAIMA ARSHAD\",\n  \"recipientName\": \"ABDUL RAHEEM QURESHI\",\n  \"recipientAccountNumber\": \"03371456781\",\n  \"confidence\": \"high\"\n}",
+        "confidence": "high",
+        "receivedAt": "2026-09-14T19:10:05.335Z",
+        "status": "confirmed",
+        "screenshotAt": "2026-09-14T19:10:07.222Z",
+        "autoConfirmEligible": true,
+        "flagReasons": [],
+        "confirmedAt": "2026-09-14T19:10:07.236Z"
+      },
+      {
+        "amount": 10,
+        "currency": "PKR",
+        "date": "15 September 2026, 12:09 AM",
+        "referenceNumber": "#55819484769",
+        "senderName": "SAIMA ARSHAD",
+        "recipientName": "ABDUL RAHEEM QURESHI",
+        "recipientAccountNumber": "03371456781",
+        "rawText": "{\n  \"amount\": 10.00,\n  \"currency\": \"PKR\",\n  \"date\": \"15 September 2026, 12:09 AM\",\n  \"referenceNumber\": \"#55819484769\",\n  \"senderName\": \"SAIMA ARSHAD\",\n  \"recipientName\": \"ABDUL RAHEEM QURESHI\",\n  \"recipientAccountNumber\": \"03371456781\",\n  \"confidence\": \"high\"\n}",
+        "confidence": "high",
+        "receivedAt": "2026-09-14T19:15:50.831Z",
+        "status": "rejected",
+        "screenshotAt": "2026-09-14T19:16:14.018Z",
+        "autoConfirmEligible": false,
+        "flagReasons": [
+          "Reference number already used before by this same customer (resend) — possible reused screenshot"
+        ],
+        "rejectedAt": "2026-09-14T19:16:43.456Z",
+        "rejectReason": "wrong"
+      }
+    ],
+    "createdAt": "2026-09-14T01:16:52.167Z"
+  },
+  {
+    "jid": "230554314244224@lid",
+    "name": null,
+    "pushName": "my self",
+    "stage": "select_coaching",
+    "selectedCoaching": null,
+    "payment": null,
+    "paymentHistory": [],
+    "createdAt": "2026-09-14T02:36:57.849Z"
+  }
+]

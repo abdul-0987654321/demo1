@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coaching Payment Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --border: #262b36;
+    --text: #e8eaed;
+    --muted: #8b92a3;
+    --accent: #4f8cff;
+    --green: #33c17a;
+    --red: #e5555a;
+    --amber: #e0a63a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 18px; margin: 0; }
+  #statusPill {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--border);
+    color: var(--muted);
+  }
+  #statusPill.connected { background: rgba(51,193,122,0.15); color: var(--green); }
+  #statusPill.qr, #statusPill.starting, #statusPill.reconnecting { background: rgba(224,166,58,0.15); color: var(--amber); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+    padding: 20px 24px;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .panel h2 { font-size: 14px; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  #qrBox { text-align: center; }
+  #qrBox img { width: 100%; max-width: 260px; border-radius: 8px; background: #fff; padding: 8px; }
+  #qrHint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  tr:hover { background: rgba(255,255,255,0.02); }
+
+  .badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge.pending { background: rgba(224,166,58,0.15); color: var(--amber); }
+  .badge.confirmed { background: rgba(51,193,122,0.15); color: var(--green); }
+  .badge.rejected { background: rgba(229,85,90,0.15); color: var(--red); }
+  .badge.high { background: rgba(51,193,122,0.15); color: var(--green); }
+  .badge.medium { background: rgba(224,166,58,0.15); color: var(--amber); }
+  .badge.low { background: rgba(229,85,90,0.15); color: var(--red); }
+
+  .actions button {
+    border: none;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 6px;
+  }
+  .btn-confirm { background: var(--green); color: #06251a; }
+  .btn-reject { background: var(--red); color: #2a0a0b; }
+
+  #loginBox {
+    max-width: 320px;
+    margin: 120px auto;
+    text-align: center;
+  }
+  #loginBox input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+  }
+  #loginBox button {
+    margin-top: 12px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .hidden { display: none; }
+  .empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
+</style>
+</head>
+<body>
+
+<div id="loginBox">
+  <h2>Dashboard Login</h2>
+  <input id="passwordInput" type="password" placeholder="Password" />
+  <button onclick="login()">Enter</button>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>Coaching Payment Dashboard</h1>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span id="pendingCountPill" class="badge medium hidden"></span>
+      <span id="statusPill">connecting...</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="panel" id="qrPanel">
+      <h2>WhatsApp Connection</h2>
+      <div id="qrBox">
+        <div class="empty">Loading status...</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel" style="margin-bottom:20px;">
+        <h2>Pending Payments</h2>
+        <table id="pendingTable">
+          <thead>
+            <tr><th>Customer</th><th>Coaching</th><th>Amount</th><th>Sender (on slip)</th><th>Ref</th><th>Slip Date</th><th>Msg Received</th><th>Confidence</th><th>Flags</th><th>Actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="pendingEmpty" class="empty hidden">No pending payments right now.</div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <h2 style="margin:0;">All Customers</h2>
+          <select id="coachingFilter" style="background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12px;">
+            <option value="">All coachings</option>
+          </select>
+        </div>
+        <table id="customersTable">
+          <thead>
+            <tr><th>Customer</th><th>Stage</th><th>Coaching</th><th>Payment</th><th>History</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let PASSWORD = '';
+let COACHING_MAP = {}; // id -> label, so tables can show "Coaching 3" instead of "c3"
+let SELECTED_COACHING_FILTER = '';
+
+function login() {
+  PASSWORD = document.getElementById('passwordInput').value;
+  document.getElementById('loginBox').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('coachingFilter').addEventListener('change', (e) => {
+    SELECTED_COACHING_FILTER = e.target.value;
+    refreshCustomers();
+  });
+  loadCoachings();
+  refreshAll();
+  setInterval(refreshAll, 4000); // poll every 4s — good enough for a demo
+}
+
+async function loadCoachings() {
+  const { ok, coachings } = await api('/api/coachings');
+  if (!ok) return;
+  COACHING_MAP = {};
+  const select = document.getElementById('coachingFilter');
+  select.innerHTML = '<option value="">All coachings</option>';
+  for (const c of coachings) {
+    COACHING_MAP[c.id] = c.label;
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.label;
+    select.appendChild(opt);
+  }
+}
+function coachingLabel(id) {
+  return COACHING_MAP[id] || id || '—';
+}
+
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'x-dash-password': PASSWORD, ...(options.headers || {}) },
+  });
+  return res.json();
+}
+
+async function refreshAll() {
+  await refreshStatus();
+  await refreshPending();
+  await refreshCustomers();
+}
+
+async function refreshStatus() {
+  const { ok, status } = await api('/api/status');
+  if (!ok) return;
+  const pill = document.getElementById('statusPill');
+  pill.textContent = status.status;
+  pill.className = status.status;
+
+  const qrBox = document.getElementById('qrBox');
+  if (status.status === 'connected') {
+    qrBox.innerHTML = `<div class="empty">✅ Connected as ${status.me?.name || status.me?.id || 'WhatsApp'}</div>`;
+  } else if (status.qrDataUrl) {
+    qrBox.innerHTML = `<img src="${status.qrDataUrl}" alt="Scan to connect" /><div id="qrHint">Scan with WhatsApp → Linked Devices</div>`;
+  } else {
+    qrBox.innerHTML = `<div class="empty">Waiting for QR code...</div>`;
+  }
+}
+
+async function refreshPending() {
+  const { ok, pending } = await api('/api/payments/pending');
+  if (!ok) return;
+  const tbody = document.querySelector('#pendingTable tbody');
+  const empty = document.getElementById('pendingEmpty');
+  const countPill = document.getElementById('pendingCountPill');
+  tbody.innerHTML = '';
+
+  if (pending.length) {
+    countPill.textContent = `${pending.length} pending`;
+    countPill.classList.remove('hidden');
+  } else {
+    countPill.classList.add('hidden');
+  }
+
+  if (!pending.length) { empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  for (const p of pending) {
+    const tr = document.createElement('tr');
+    const wrongAccount = (p.payment.flagReasons || []).some((r) => /wrong account/i.test(r));
+    if (wrongAccount) tr.style.borderLeft = '3px solid var(--red)';
+    const amount = p.payment.amount ? `${p.payment.currency || ''} ${p.payment.amount}` : '—';
+    const ref = p.payment.referenceNumber || '—';
+    const sender = p.payment.senderName || '—';
+    const slipDate = p.payment.date || '—';
+    const receivedAt = p.payment.receivedAt ? new Date(p.payment.receivedAt).toLocaleString() : '—';
+    const flags = (p.payment.flagReasons || []).length
+      ? `<div><span class="badge low">${p.payment.flagReasons.length} issue(s)</span>
+          <ul style="margin:4px 0 0 16px; padding:0; font-size:11px; color:var(--muted);">
+            ${p.payment.flagReasons.map((r) => `<li>${r}</li>`).join('')}
+          </ul></div>`
+      : '—';
+    tr.innerHTML = `
+      <td>${p.name}</td>
+      <td>${coachingLabel(p.coaching)}</td>
+      <td>${amount}</td>
+      <td>${sender}</td>
+      <td>${ref}</td>
+      <td>${slipDate}</td>
+      <td>${receivedAt}</td>
+      <td><span class="badge ${p.payment.confidence}">${p.payment.confidence}</span></td>
+      <td>${flags}</td>
+      <td class="actions">
+        <button class="btn-confirm" onclick="confirmPayment('${encodeURIComponent(p.jid)}')">Confirm</button>
+        <button class="btn-reject" onclick="rejectPayment('${encodeURIComponent(p.jid)}')">Reject</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+async function refreshCustomers() {
+  const { ok, customers } = await api('/api/customers');
+  if (!ok) return;
+  const tbody = document.querySelector('#customersTable tbody');
+  tbody.innerHTML = '';
+  const filtered = SELECTED_COACHING_FILTER
+    ? customers.filter((c) => c.coaching === SELECTED_COACHING_FILTER)
+    : customers;
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">No customers in this coaching yet.</td></tr>`;
+    return;
+  }
+  for (const c of filtered) {
+    const tr = document.createElement('tr');
+    const paymentBadge = c.paymentStatus ? `<span class="badge ${c.paymentStatus}">${c.paymentStatus}</span>` : '—';
+    tr.innerHTML = `
+      <td>${c.name}</td>
+      <td>${c.stage}</td>
+      <td>${coachingLabel(c.coaching)}</td>
+      <td>${paymentBadge}</td>
+      <td><button class="btn-confirm" style="background:var(--accent); color:#fff;" onclick="showPaymentHistory('${encodeURIComponent(c.jid)}', '${c.name.replace(/'/g, "\\'")}')">View</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+async function showPaymentHistory(jid, name) {
+  const { ok, history } = await api(`/api/customers/${jid}/payment-history`);
+  if (!ok) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:100;';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  const rows = history.length
+    ? history.map((h, i) => `
+        <tr>
+          <td>${history.length - i}</td>
+          <td>${h.amount ? `${h.currency || ''} ${h.amount}` : '—'}</td>
+          <td>${h.senderName || '—'}</td>
+          <td>${h.referenceNumber || '—'}</td>
+          <td><span class="badge ${h.status}">${h.status}</span></td>
+          <td>${h.screenshotAt ? new Date(h.screenshotAt).toLocaleString() : '—'}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="6" class="empty">No past attempts — this customer's current payment is their first.</td></tr>`;
+
+  overlay.innerHTML = `
+    <div class="panel" style="max-width:640px; width:90%; max-height:80vh; overflow:auto;">
+      <h2>Payment history — ${name}</h2>
+      <table>
+        <thead><tr><th>#</th><th>Amount</th><th>Sender</th><th>Ref</th><th>Status</th><th>Screenshot sent</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+async function confirmPayment(jid) {
+  await api(`/api/payments/${jid}/confirm`, { method: 'POST' });
+  refreshAll();
+}
+async function rejectPayment(jid) {
+  const reason = prompt('Reason for rejecting (optional):') || '';
+  await api(`/api/payments/${jid}/reject`, { method: 'POST', body: JSON.stringify({ reason }) });
+  refreshAll();
+}
+</script>
+
+</body>
+</html>
