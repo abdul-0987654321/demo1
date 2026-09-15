@@ -17,9 +17,6 @@ const {
 } = require('@itsliaaa/baileys');
 const QRCode = require('qrcode');
 const pino = require('pino');
-const http = require('http');
-const path = require('path');
-const fs = require('fs');
 const store = require('./store');
 const ocr = require('./ocr');
 
@@ -126,8 +123,8 @@ async function handleScreenshot(jid, patient, msg) {
     const receivedAt = new Date().toISOString();
     const buffer = await downloadMediaMessage(msg, 'buffer', {});
     const ocrResult = await ocr.readPaymentScreenshot(buffer);
-    ocrResult.receivedAt = receivedAt;
-    log('info', `OCR raw text for ${jid}:\n${ocrResult.rawText}`);
+    ocrResult.receivedAt = receivedAt; // when the WhatsApp message actually arrived (separate from the slip's own printed date)
+    log('info', `OCR raw text for ${jid}:\n${ocrResult.rawText}`); // TEMP: remove once extraction is reliable
 
     const { validation } = store.recordPaymentScreenshot(jid, ocrResult);
     patient.stage = 'pending_review';
@@ -148,7 +145,7 @@ async function handleScreenshot(jid, patient, msg) {
   }
 }
 
-// ---- dashboard Actions ----
+// ---- called from the dashboard when hansimatik clicks Confirm/Reject ----
 async function confirmPaymentAndSendLink(jid) {
   const patient = store.confirmPayment(jid);
   if (!patient) return { ok: false, error: 'no pending payment' };
@@ -157,6 +154,7 @@ async function confirmPaymentAndSendLink(jid) {
   patient.stage = 'main';
   store.savePatient(patient);
   if (linkIsPlaceholder) {
+    // Don't send a broken/placeholder link to a paying customer — flag it for manual follow-up instead.
     log('warn', `Group link for coaching "${coaching?.id}" is still a placeholder — payment confirmed but link NOT sent to ${jid}`);
     await send(jid, {
       text: `✅ Payment confirmed for *${coaching?.label || 'your coaching'}*! Your group link is being finalized and will be sent to you shortly.`,
@@ -208,9 +206,11 @@ async function onMessage(msg) {
   if (!jid || msg.key.fromMe) return;
   if (jid === 'status@broadcast' || jid.endsWith('@newsletter') || jid.endsWith('@g.us')) return;
 
+  // Mark the incoming message as read so the customer sees blue ticks (double check marks).
+  // Without this, Baileys never sends a read receipt — messages just sit as delivered (grey ticks).
   if (runtime.sock) {
     try {
-      await runtime.sock.sendPresenceUpdate('available');
+      await runtime.sock.sendPresenceUpdate('available'); // some Baileys versions need presence "available" before read receipts land reliably
       await runtime.sock.readMessages([msg.key]);
     } catch (err) {
       log('warn', `Failed to mark message as read for ${jid}: ${err.message}`);
@@ -227,11 +227,11 @@ async function onMessage(msg) {
     await handleScreenshot(jid, patient, msg);
     return;
   }
-  if (!text) return;
+  if (!text) return; // ignore non-text, non-relevant-image messages
   await handleText(jid, patient, text);
 }
 
-// ---- connection lifecycle ----
+// ---- connection lifecycle (same pattern as your reference bot) ----
 function detachSocket() {
   if (!runtime.sock) return;
   try { runtime.sock.ev.removeAllListeners(); } catch (_) {}
@@ -251,7 +251,7 @@ async function start() {
     const sock = makeWASocket({
       version,
       auth: { creds: authState.creds, keys: makeCacheableSignalKeyStore(authState.keys, logger) },
-      logger, printQRInTerminal: true, markOnlineOnConnect: false, syncFullHistory: false,
+      logger, printQRInTerminal: false, markOnlineOnConnect: false, syncFullHistory: false,
       browser: ['CoachingPaymentBot', 'Chrome', '120.0.0'],
     });
     runtime.sock = sock;
@@ -302,61 +302,6 @@ async function stop() {
   await ocr.shutdown();
   return { ok: true, message: 'Bot stopped.' };
 }
-
-// ---- Static Dashboard Server (Targeting dashboard/public/) ----
-const PORT = process.env.PORT || 3000;
-
-const server = http.createServer((req, res) => {
-  // 1. API Endpoint for status checks
-  if (req.url === '/api/status' || req.url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(getStatus()));
-  }
-
-  // 2. Resolve requested file path starting inside dashboard/public/
-  const cleanUrl = req.url.split('?')[0];
-  const relativePath = cleanUrl === '/' ? 'index.html' : cleanUrl.replace(/^\/+/, '');
-  
-  // Primary location: ./dashboard/public/
-  let filePath = path.join(__dirname, 'dashboard', 'public', relativePath);
-  
-  // Fallback location 1: ./dashboard/
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(__dirname, 'dashboard', relativePath);
-  }
-
-  // Fallback location 2: ./ (root folder)
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(__dirname, relativePath);
-  }
-
-  // 3. Serve File
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/html' });
-      return res.end('<h3>404: Dashboard File Not Found</h3>');
-    }
-
-    const ext = path.extname(filePath);
-    const contentType = {
-      '.html': 'text/html',
-      '.css': 'text/css',
-      '.js': 'text/javascript',
-      '.json': 'application/json',
-      '.png': 'image/png',
-      '.jpg': 'image/jpeg',
-      '.svg': 'image/svg+xml'
-    }[ext] || 'text/plain';
-
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(data);
-  });
-});
-
-server.listen(PORT, () => {
-  log('info', `HTTP Server running on port ${PORT}`);
-  start();
-});
 
 module.exports = {
   start,
