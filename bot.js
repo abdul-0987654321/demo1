@@ -18,6 +18,8 @@ const {
 const QRCode = require('qrcode');
 const pino = require('pino');
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
 const store = require('./store');
 const ocr = require('./ocr');
 
@@ -50,7 +52,7 @@ function getStatus() {
   };
 }
 
-// ---- send helper (kept simple for the demo — no queue/typing-delay yet) ----
+// ---- send helper ----
 async function send(jid, content) {
   if (!runtime.sock) return { ok: false, error: 'not connected' };
   try {
@@ -146,7 +148,7 @@ async function handleScreenshot(jid, patient, msg) {
   }
 }
 
-// ---- called from the dashboard when hansimatik clicks Confirm/Reject ----
+// ---- dashboard Actions ----
 async function confirmPaymentAndSendLink(jid) {
   const patient = store.confirmPayment(jid);
   if (!patient) return { ok: false, error: 'no pending payment' };
@@ -249,7 +251,7 @@ async function start() {
     const sock = makeWASocket({
       version,
       auth: { creds: authState.creds, keys: makeCacheableSignalKeyStore(authState.keys, logger) },
-      logger, printQRInTerminal: false, markOnlineOnConnect: false, syncFullHistory: false,
+      logger, printQRInTerminal: true, markOnlineOnConnect: false, syncFullHistory: false,
       browser: ['CoachingPaymentBot', 'Chrome', '120.0.0'],
     });
     runtime.sock = sock;
@@ -301,16 +303,63 @@ async function stop() {
   return { ok: true, message: 'Bot stopped.' };
 }
 
-// ---- HTTP Server & Auto-Start for Render deployment ----
+// ---- Static File & Dashboard Web Server ----
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
-  if (req.url === '/health' || req.url === '/') {
+  // API Route to fetch status
+  if (req.url === '/api/status' || req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ status: 'ok', botStatus: runtime.status }));
+    return res.end(JSON.stringify(getStatus()));
   }
-  res.writeHead(404);
-  res.end();
+
+  // Determine requested path
+  let relativePath = req.url === '/' ? 'index.html' : req.url;
+  
+  // Try looking in /dashboard directory first, then root directory
+  let filePath = path.join(__dirname, 'dashboard', relativePath);
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(__dirname, relativePath);
+  }
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      // Fallback HTML page showing QR Code if dashboard files fail to load
+      if (req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        if (runtime.status === 'connected') {
+          return res.end('<h2 style="font-family:sans-serif;text-align:center;margin-top:50px;">✅ Bot is Connected to WhatsApp!</h2>');
+        }
+        if (runtime.qrDataUrl) {
+          return res.end(`
+            <div style="font-family:sans-serif;text-align:center;margin-top:50px;">
+              <h2>Scan WhatsApp QR Code</h2>
+              <img src="${runtime.qrDataUrl}" style="border:5px solid #ccc;border-radius:8px;" />
+              <p>Refresh page if expired</p>
+            </div>
+          `);
+        }
+        return res.end('<h2 style="font-family:sans-serif;text-align:center;margin-top:50px;">Bot Starting... Please refresh in 5 seconds.</h2>');
+      }
+
+      res.writeHead(404);
+      return res.end('File Not Found');
+    }
+
+    const ext = path.extname(filePath);
+    const contentType = {
+      '.html': 'text/html',
+      '.css': 'text/css',
+      '.js': 'text/javascript',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.svg': 'image/svg+xml'
+    }[ext] || 'text/plain';
+
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(data);
+  });
 });
 
 server.listen(PORT, () => {
