@@ -17,6 +17,7 @@ const {
 } = require('@itsliaaa/baileys');
 const QRCode = require('qrcode');
 const pino = require('pino');
+const http = require('http');
 const store = require('./store');
 const ocr = require('./ocr');
 
@@ -123,8 +124,8 @@ async function handleScreenshot(jid, patient, msg) {
     const receivedAt = new Date().toISOString();
     const buffer = await downloadMediaMessage(msg, 'buffer', {});
     const ocrResult = await ocr.readPaymentScreenshot(buffer);
-    ocrResult.receivedAt = receivedAt; // when the WhatsApp message actually arrived (separate from the slip's own printed date)
-    log('info', `OCR raw text for ${jid}:\n${ocrResult.rawText}`); // TEMP: remove once extraction is reliable
+    ocrResult.receivedAt = receivedAt;
+    log('info', `OCR raw text for ${jid}:\n${ocrResult.rawText}`);
 
     const { validation } = store.recordPaymentScreenshot(jid, ocrResult);
     patient.stage = 'pending_review';
@@ -154,7 +155,6 @@ async function confirmPaymentAndSendLink(jid) {
   patient.stage = 'main';
   store.savePatient(patient);
   if (linkIsPlaceholder) {
-    // Don't send a broken/placeholder link to a paying customer — flag it for manual follow-up instead.
     log('warn', `Group link for coaching "${coaching?.id}" is still a placeholder — payment confirmed but link NOT sent to ${jid}`);
     await send(jid, {
       text: `✅ Payment confirmed for *${coaching?.label || 'your coaching'}*! Your group link is being finalized and will be sent to you shortly.`,
@@ -206,11 +206,9 @@ async function onMessage(msg) {
   if (!jid || msg.key.fromMe) return;
   if (jid === 'status@broadcast' || jid.endsWith('@newsletter') || jid.endsWith('@g.us')) return;
 
-  // Mark the incoming message as read so the customer sees blue ticks (double check marks).
-  // Without this, Baileys never sends a read receipt — messages just sit as delivered (grey ticks).
   if (runtime.sock) {
     try {
-      await runtime.sock.sendPresenceUpdate('available'); // some Baileys versions need presence "available" before read receipts land reliably
+      await runtime.sock.sendPresenceUpdate('available');
       await runtime.sock.readMessages([msg.key]);
     } catch (err) {
       log('warn', `Failed to mark message as read for ${jid}: ${err.message}`);
@@ -227,11 +225,11 @@ async function onMessage(msg) {
     await handleScreenshot(jid, patient, msg);
     return;
   }
-  if (!text) return; // ignore non-text, non-relevant-image messages
+  if (!text) return;
   await handleText(jid, patient, text);
 }
 
-// ---- connection lifecycle (same pattern as your reference bot) ----
+// ---- connection lifecycle ----
 function detachSocket() {
   if (!runtime.sock) return;
   try { runtime.sock.ev.removeAllListeners(); } catch (_) {}
@@ -302,6 +300,23 @@ async function stop() {
   await ocr.shutdown();
   return { ok: true, message: 'Bot stopped.' };
 }
+
+// ---- HTTP Server & Auto-Start for Render deployment ----
+const PORT = process.env.PORT || 3000;
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/health' || req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ status: 'ok', botStatus: runtime.status }));
+  }
+  res.writeHead(404);
+  res.end();
+});
+
+server.listen(PORT, () => {
+  log('info', `HTTP Server running on port ${PORT}`);
+  start();
+});
 
 module.exports = {
   start,
