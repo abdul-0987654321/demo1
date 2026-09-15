@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Install build dependencies for native C++ npm packages
 RUN apk add --no-cache python3 make g++ graphicsmagick
@@ -7,8 +7,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# Clean npm cache and install packages
-RUN npm ci || npm install --production
+# Install dependencies using standard install
+RUN npm install
 
 COPY . .
 
